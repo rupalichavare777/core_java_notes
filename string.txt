@@ -1,0 +1,305 @@
+⭐ STRINGS + STRING POOL + IMMUTABILITY + MEMORY BEHAVIOR (SUPER DEEP)
+
+This topic is asked in EVERY interview because Strings touch:
+
+Memory
+
+Immutability
+
+ClassLoader
+
+Heap
+
+Method Area
+
+Pass-by-value
+
+Wrapper behavior
+
+Multithreading
+
+Performance
+
+Let’s go step-by-step, from the deepest fundamentals to the trickiest interview traps.
+
+🚀 CHAPTER 1 — What exactly is a String in Java?
+
+Many developers think “String is a data type” — WRONG.
+
+✔ String is a final class
+✔ Represents immutable sequence of characters
+✔ Lives in Heap
+✔ Literals live in String Pool (inside Method Area)
+
+Key takeaway:
+String objects can live BOTH in heap and in pool, depending on how you create them.
+
+🚀 CHAPTER 2 — STRING POOL (DEEP INTERNALS)
+Where is the String Pool?
+
+📌 In Method Area / Metaspace, not heap.
+
+What does the pool contain?
+
+All literal Strings from your code
+
+Interned Strings
+
+Class constant pool references
+
+Why pool exists?
+
+Reuse common strings
+
+Save memory
+
+Speed (reference comparison)
+
+⭐ CHAPTER 3 — Literal String vs new String()
+Case 1: Literal
+String s1 = "java";
+String s2 = "java";
+
+
+Memory:
+
+String Pool:
+    "java"   ← s1, s2
+
+
+✔ SAME object
+✔ SAME memory address
+✔ s1 == s2 → true
+✔ No heap object created
+
+Case 2: new String()
+String s1 = new String("java");
+
+
+Memory:
+
+String Pool:
+    "java"
+
+Heap:
+    "java" ← new object
+
+
+✔ Two objects created
+✔ One in pool (literal)
+✔ One in heap (via new)
+✔ s1 == "java" → false
+
+⭐ CHAPTER 4 — Why String is immutable?
+
+This is one of Java’s top interview questions. REAL reasons:
+
+✔ 1. String Pool Requires Immutability
+
+If Strings were mutable, someone could modify "java" in pool → breaks entire application.
+
+✔ 2. Security
+
+Used heavily in:
+
+File paths
+
+ClassLoader
+
+URLs
+
+DB credentials
+
+Socket names
+
+If mutable → HUGE security issues.
+
+✔ 3. HashMap keys
+
+Strings are commonly used as keys.
+
+If value changed → hashCode changes → bucket broken → data lost.
+
+✔ 4. Thread safety
+
+Immutable objects are inherently thread-safe.
+
+⭐ CHAPTER 5 — What is intern()?
+String s1 = new String("java");
+String s2 = s1.intern();
+String s3 = "java";
+
+
+Memory:
+
+Pool:
+   "java"   ← s2, s3
+
+Heap:
+   "java"   ← s1
+
+
+✔ s2 == s3 → true
+✔ s1 == s2 → false
+
+intern() returns pool version.
+
+🚀 CHAPTER 6 — How many objects created?
+Case:
+String s = new String("hello");
+
+
+Answer:
+
+Literal "hello" → pool
+
+new String("hello") → heap
+
+Total = 2 objects
+
+🚀 CHAPTER 7 — CONCATENATION RULES (IMPORTANT)
+Case 1 — Compile-Time
+String s = "ab" + "cd";
+
+
+✔ Compiler optimizes → "abcd"
+✔ Stored in pool
+✔ 1 object only
+
+Case 2 — Runtime
+String a = "ab";
+String b = "cd";
+String c = a + b;
+
+
+✔ New object created in heap
+✔ Because compiler cannot know values beforehand
+
+Memory:
+
+Pool:
+   "ab"
+   "cd"
+   (maybe "abcd" not added automatically)
+
+Heap:
+   "abcd" ← c
+
+Case 3 — Using StringBuilder
+String c = a + b + d + e;
+
+
+Compiler converts to:
+
+new StringBuilder().append(a).append(b).append(d).append(e).toString();
+
+
+✔ Efficient
+✔ Only one final object created
+
+⭐ CHAPTER 8 — StringBuilder vs StringBuffer vs String
+Feature	String	StringBuilder	StringBuffer
+Mutable	❌ No	✔ Yes	✔ Yes
+Thread-safe	✔ Yes	❌ No	✔ Yes
+Fast?	Slow	Fastest	Slower
+Uses	Constants	Loops, concatenation	Multi-thread
+⭐ CHAPTER 9 — PASS-BY-VALUE with Strings
+String s = "hello";
+
+public void change(String s) {
+    s = "world";
+}
+
+change(s);
+System.out.println(s); 
+
+
+Output:
+
+hello
+
+
+Why?
+
+String is immutable
+
+Java is pass-by-value
+
+Assignment inside method does NOT affect original
+
+Memory:
+
+Outside: s → "hello"
+Inside change: s → "world" (different reference)
+
+⭐ CHAPTER 10 — TRICKY INTERVIEW QUESTIONS
+Q1: What is the output?
+String s1 = "abc";
+String s2 = "abc";
+System.out.println(s1 == s2);
+
+
+true
+Same pool reference.
+
+Q2:
+String s1 = new String("abc");
+String s2 = new String("abc");
+System.out.println(s1 == s2);
+
+
+false
+Two heap objects.
+
+Q3:
+String s1 = new String("abc");
+String s2 = s1.intern();
+String s3 = "abc";
+
+System.out.println(s2 == s3);
+System.out.println(s1 == s2);
+
+
+Output:
+
+true
+false
+
+Q4: Which is faster:
+
+String or StringBuilder?
+
+StringBuilder → fast
+Because String is immutable → creates new objects every time.
+
+Q5: Why is String final?
+
+To preserve immutability.
+If subclass modifies internal char array → pool breaks.
+
+⭐ CHAPTER 11 — MEMORY DIAGRAMS (Interview Style)
+Example:
+String s1 = "hello";
+String s2 = s1;
+String s3 = new String("hello");
+
+
+Memory:
+
+Pool:
+   "hello"  ← s1, s2
+
+Heap:
+   "hello"  ← s3
+
+⭐ CHAPTER 12 — SUMMARY (1-MINUTE REVISION)
+
+✔ String is immutable
+✔ String literals stored in String Pool
+✔ "abc" reused, new String("abc") creates new heap object
+✔ intern() returns pool reference
+✔ Compile-time concat stored in pool
+✔ Runtime concat → heap
+✔ == compares reference, .equals() compares value
+✔ StringBuilder for performance
+✔ StringBuffer for thread safety
